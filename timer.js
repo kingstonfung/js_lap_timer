@@ -1,6 +1,9 @@
-if (typeof kingular_js === 'undefined') kingular_js = {};
+/* global Redux:true Kingular:true */
+if (typeof Kingular === 'undefined') {
+  Kingular = {};
+}
 
-kingular_js.clientTimer = (function(doc, ls, r) {
+Kingular.clientTimer = ((doc, ls, r) => {
   /*
   TO DO:
     1. Fix scattered clearTimeout
@@ -18,117 +21,135 @@ kingular_js.clientTimer = (function(doc, ls, r) {
   const TIMER_UPDATE_INTERVAL = 17; // '60'fps
   const CLICK_EVENT = 'click';
 
-  var startBtn = doc.getElementsByClassName("startTimerButton")[0];
-  var stopBtn = doc.getElementsByClassName("stopTimerButton")[0];
-  var lapBtn = doc.getElementsByClassName("lapTimerButton")[0];
-  var resetBtn = doc.getElementsByClassName("resetButton")[0];
-  var timerDisplayElement = doc.getElementsByClassName("timerText")[0];
+  const startBtn = doc.getElementsByClassName('startTimerButton')[0];
+  const stopBtn = doc.getElementsByClassName('stopTimerButton')[0];
+  const lapBtn = doc.getElementsByClassName('lapTimerButton')[0];
+  const resetBtn = doc.getElementsByClassName('resetButton')[0];
+  const timerDisplayElement = doc.getElementsByClassName('timerText')[0];
 
-  var storedState;
-  var state = {};
-  var timerTimeoutID = -1;
+  let storedState = {};
+  let state = {};
+  let timerTimeoutID = -1;
 
-  var getBlankTimerObj = function() {
-    return {
-      timerStart: +new Date(),
-      elapsed: 0,
-      laps: [],
-      isRunning: false
+  const getBlankTimerObj = () => ({
+    timerStart: +new Date(),
+    elapsed: 0,
+    laps: [],
+    isRunning: false,
+  });
+
+  const timerClockReducerFunc = (appState, action) => {
+    /*
+      Favoring object literals over Switch: bit.ly/2ocD6bS
+    */
+    let fn;
+    let newAppState;
+    const actionSwitch = {
+      [TIMER_START]() {
+        newAppState = {
+          isRunning: true,
+        };
+        return Object.assign(appState, newAppState);
+      },
+      [TIMER_TICK]() {
+        const lapsCount = appState.elapsed;
+        const newTime = +new Date() - appState.timerStart;
+        newAppState = {
+          laps: appState.laps,
+        };
+        newAppState.laps[lapsCount] = newTime;
+        return Object.assign(appState, newAppState);
+      },
+      [LAP_CAPTURE]() {
+        newAppState = {
+          elapsed: (appState.elapsed + 1),
+        };
+        return Object.assign(appState, newAppState);
+      },
+      [TIMER_STOP]() {
+        newAppState = {
+          isRunning: false,
+        };
+        return Object.assign(appState, newAppState);
+      },
+      [TIMER_RESET]() {
+        return getBlankTimerObj();
+      },
     };
+    if (actionSwitch[action.type]) {
+      fn = actionSwitch[action.type];
+    } else {
+      fn = () => (appState);
+    }
+    return fn();
   };
 
-  var timerClockReducerFunc = function(state, action) {
-    if (typeof state === 'undefined') return getBlankTimerObj();
-    var timeSinceStart = +new Date() - state.timerStart;
-    switch (action.type) {
-      case TIMER_START:
-        state.isRunning = true;
-      case TIMER_TICK:
-        state.laps[state.elapsed] = timeSinceStart;
-        return state;
-      case LAP_CAPTURE:
-        state.elapsed++;
-        return state;
-      case TIMER_STOP:
-        state.isRunning = false;
-        return state;
-      case TIMER_RESET:
-        return getBlankTimerObj();
-      default:
-        return state;
-    }
-  }
-
-  var updateTimerDOM = function() {
-    var s = state.getState();
-    var displayStr = "0";
-    if (s.laps.length) {
-      displayStr = s.laps.map(function(time) {
-        return time;
-      });
+  const updateTimerDOM = (s) => {
+    const laps = s.laps;
+    console.log('laps', laps);
+    let displayStr = '0';
+    if (laps.length) {
+      displayStr = laps.map(time => time);
     }
     timerDisplayElement.innerHTML = displayStr;
   };
 
-  var saveToLocalStorage = function(key, data) {
+  const saveToLocalStorage = (key, data) => {
     ls.setItem(key, JSON.stringify(data));
-  }
+  };
 
-  var loadFromLocalStorage = function(key) {
-    return JSON.parse(ls.getItem(key));
-  }
+  const loadFromLocalStorage = key => JSON.parse(ls.getItem(key));
 
-  var dispatchStartEvent = function() {
+  const dispatchStartEvent = () => {
     state.dispatch({ type: TIMER_START });
-  }
+  };
 
-  var dispatchTickEvent = function() {
+  const dispatchTickEvent = () => {
     state.dispatch({ type: TIMER_TICK });
-  }
+  };
 
-  var dispatchLapEvent = function() {
+  const dispatchLapEvent = () => {
     state.dispatch({ type: LAP_CAPTURE });
-  }
+  };
 
-  var dispatchStopEvent = function() {
+  const dispatchStopEvent = () => {
     clearTimeout(timerTimeoutID);
     state.dispatch({ type: TIMER_STOP });
-  }
+  };
 
-  var dispatchResetEvent = function() {
+  const dispatchResetEvent = () => {
     if (state.getState().isRunning) dispatchStopEvent();
     state.dispatch({ type: TIMER_RESET });
-  }
+  };
 
-  var createTimeoutCall = function() {
-    return setTimeout(function () {
+  const createTimeoutCall = () => (
+    setTimeout(() => {
       dispatchTickEvent();
-    }, TIMER_UPDATE_INTERVAL);
-  }
+    }, TIMER_UPDATE_INTERVAL)
+  );
 
-  stopBtn.addEventListener(CLICK_EVENT, function() {
+  stopBtn.addEventListener(CLICK_EVENT, () => {
     dispatchStopEvent();
   });
 
-  lapBtn.addEventListener(CLICK_EVENT, function() {
+  lapBtn.addEventListener(CLICK_EVENT, () => {
     dispatchLapEvent();
   });
 
-  startBtn.addEventListener(CLICK_EVENT, function() {
+  startBtn.addEventListener(CLICK_EVENT, () => {
     dispatchStartEvent();
   });
 
-  resetBtn.addEventListener(CLICK_EVENT, function() {
+  resetBtn.addEventListener(CLICK_EVENT, () => {
     dispatchResetEvent();
   });
 
-
   storedState = loadFromLocalStorage(LOCAL_STORAGE_KEY) || getBlankTimerObj();
   state = r.createStore(timerClockReducerFunc, storedState);
-  updateTimerDOM();
-  state.subscribe(function () {
-    var s = state.getState();
-    updateTimerDOM();
+  updateTimerDOM(state.getState());
+  state.subscribe(() => {
+    const s = state.getState();
+    updateTimerDOM(s);
     saveToLocalStorage(LOCAL_STORAGE_KEY, s);
     if (s.isRunning) {
       clearTimeout(timerTimeoutID);
@@ -136,11 +157,12 @@ kingular_js.clientTimer = (function(doc, ls, r) {
     }
   });
 
-
   return { // Public APIs
-    getTimersOutput: function() {
+    getTimersOutput() {
       return state.getState().laps;
-    }
-  }
-
-}(document, window.localStorage, Redux));
+    },
+    state() {
+      return storedState;
+    },
+  };
+})(document, window.localStorage, Redux);
