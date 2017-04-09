@@ -21,7 +21,7 @@ Kingular.clientTimer = ((ls, r, tickCallback) => {
   const TIMER_STOP = 'STOP';
   const TIMER_RESET = 'RESET';
   const LOCAL_STORAGE_KEY = 'timer_data';
-  const TIMER_UPDATE_INTERVAL = 17; // '60'fps
+  const TIMER_UPDATE_INTERVAL = 250; // '60'fps
 
   let storedState = {};
   let state = {};
