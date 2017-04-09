@@ -1,14 +1,14 @@
 /* global Redux:true Kingular:true */
-if (typeof Kingular === 'undefined') {
+if (typeof Kingular === 'undefined' || !Kingular) {
   Kingular = {};
 }
 
-Kingular.clientTimer = ((doc, ls, r) => {
+Kingular.clientTimer = ((ls, r, tickCallback) => {
   /*
   TO DO:
-    1. Fix scattered clearTimeout
-    2. Fix timer reset incorrect timestamp
-    3. Lint with Airbnb JS standard
+    ✓  Fix scattered clearTimeout
+    ✓  Fix timer reset incorrect timestamp
+    ✓  Lint with Airbnb JS standard
     4. Unit Tests, Build Scripts, Minifications
   */
 
@@ -19,13 +19,6 @@ Kingular.clientTimer = ((doc, ls, r) => {
   const TIMER_RESET = 'RESET';
   const LOCAL_STORAGE_KEY = 'timer_data';
   const TIMER_UPDATE_INTERVAL = 17; // '60'fps
-  const CLICK_EVENT = 'click';
-
-  const startBtn = doc.getElementsByClassName('startTimerButton')[0];
-  const stopBtn = doc.getElementsByClassName('stopTimerButton')[0];
-  const lapBtn = doc.getElementsByClassName('lapTimerButton')[0];
-  const resetBtn = doc.getElementsByClassName('resetButton')[0];
-  const timerDisplayElement = doc.getElementsByClassName('timerText')[0];
 
   let storedState = {};
   let state = {};
@@ -39,9 +32,7 @@ Kingular.clientTimer = ((doc, ls, r) => {
   });
 
   const timerClockReducerFunc = (appState, action) => {
-    /*
-      Favoring object literals over Switch: bit.ly/2ocD6bS
-    */
+    // Favoring object literals over Switch bit.ly/2ocD6bS
     let fn;
     let newAppState;
     const actionSwitch = {
@@ -49,6 +40,9 @@ Kingular.clientTimer = ((doc, ls, r) => {
         newAppState = {
           isRunning: true,
         };
+        if (appState.laps.length === 0) {
+          newAppState.timerStart = +new Date();
+        }
         return Object.assign(appState, newAppState);
       },
       [TIMER_TICK]() {
@@ -84,42 +78,57 @@ Kingular.clientTimer = ((doc, ls, r) => {
     return fn();
   };
 
-  const updateTimerDOM = (s) => {
+  /*
+  const getTimerOutput = (s) => {
     const laps = s.laps;
-    console.log('laps', laps);
     let displayStr = '0';
     if (laps.length) {
       displayStr = laps.map(time => time);
     }
-    timerDisplayElement.innerHTML = displayStr;
+    return displayStr;
   };
+  */
 
-  const saveToLocalStorage = (key, data) => {
-    ls.setItem(key, JSON.stringify(data));
+  const saveToLocalStorage = (key, data, localstorage) => {
+    localstorage.setItem(key, JSON.stringify(data));
   };
 
   const loadFromLocalStorage = key => JSON.parse(ls.getItem(key));
 
   const dispatchStartEvent = () => {
     state.dispatch({ type: TIMER_START });
+    if (typeof tickCallback === 'function') {
+      tickCallback(state.getState());
+    }
   };
 
   const dispatchTickEvent = () => {
     state.dispatch({ type: TIMER_TICK });
+    if (typeof tickCallback === 'function') {
+      tickCallback(state.getState());
+    }
   };
 
   const dispatchLapEvent = () => {
     state.dispatch({ type: LAP_CAPTURE });
+    if (typeof tickCallback === 'function') {
+      tickCallback(state.getState());
+    }
   };
 
   const dispatchStopEvent = () => {
-    clearTimeout(timerTimeoutID);
     state.dispatch({ type: TIMER_STOP });
+    if (typeof tickCallback === 'function') {
+      tickCallback(state.getState());
+    }
   };
 
   const dispatchResetEvent = () => {
     if (state.getState().isRunning) dispatchStopEvent();
     state.dispatch({ type: TIMER_RESET });
+    if (typeof tickCallback === 'function') {
+      tickCallback(state.getState());
+    }
   };
 
   const createTimeoutCall = () => (
@@ -128,41 +137,32 @@ Kingular.clientTimer = ((doc, ls, r) => {
     }, TIMER_UPDATE_INTERVAL)
   );
 
-  stopBtn.addEventListener(CLICK_EVENT, () => {
-    dispatchStopEvent();
-  });
-
-  lapBtn.addEventListener(CLICK_EVENT, () => {
-    dispatchLapEvent();
-  });
-
-  startBtn.addEventListener(CLICK_EVENT, () => {
-    dispatchStartEvent();
-  });
-
-  resetBtn.addEventListener(CLICK_EVENT, () => {
-    dispatchResetEvent();
-  });
-
+  // Init scripts
   storedState = loadFromLocalStorage(LOCAL_STORAGE_KEY) || getBlankTimerObj();
   state = r.createStore(timerClockReducerFunc, storedState);
-  updateTimerDOM(state.getState());
   state.subscribe(() => {
     const s = state.getState();
-    updateTimerDOM(s);
-    saveToLocalStorage(LOCAL_STORAGE_KEY, s);
+    saveToLocalStorage(LOCAL_STORAGE_KEY, s, ls);
+    clearTimeout(timerTimeoutID);
     if (s.isRunning) {
-      clearTimeout(timerTimeoutID);
       timerTimeoutID = createTimeoutCall();
+    } else {
+      timerTimeoutID = -1;
     }
   });
+  if (state.getState().isRunning === true) {
+    dispatchStartEvent();
+  } else if (typeof tickCallback === 'function') {
+    tickCallback(state.getState());
+  }
 
   return { // Public APIs
-    getTimersOutput() {
-      return state.getState().laps;
-    },
-    state() {
-      return storedState;
+    stopTimer: dispatchStopEvent,
+    startTimer: dispatchStartEvent,
+    resetTimer: dispatchResetEvent,
+    lapTimer: dispatchLapEvent,
+    getTimerInfo() {
+      return state.getState();
     },
   };
-})(document, window.localStorage, Redux);
+});
