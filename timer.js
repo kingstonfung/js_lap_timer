@@ -1,17 +1,20 @@
+/*
+TO DO:
+  ✓  Fix scattered clearTimeout
+  ✓  Fix timer reset incorrect timestamp
+  ✓  Lint with Airbnb JS standard
+  4. Fix "Stop Timer".
+    - The duration between a "stop" and "start" is included right now.
+    - Just rename button and methods to "Pause Timer"?
+  5. Unit Tests, Build Scripts, Minifications
+*/
+
 /* global Redux:true Kingular:true */
 if (typeof Kingular === 'undefined' || !Kingular) {
   Kingular = {};
 }
 
 Kingular.clientTimer = ((ls, r, tickCallback) => {
-  /*
-  TO DO:
-    ✓  Fix scattered clearTimeout
-    ✓  Fix timer reset incorrect timestamp
-    ✓  Lint with Airbnb JS standard
-    4. Unit Tests, Build Scripts, Minifications
-  */
-
   const TIMER_TICK = 'TICK';
   const LAP_CAPTURE = 'LAP';
   const TIMER_START = 'START';
@@ -23,6 +26,26 @@ Kingular.clientTimer = ((ls, r, tickCallback) => {
   let storedState = {};
   let state = {};
   let timerTimeoutID = -1;
+
+  const convertMillisecondsToClockString = (ms) => {
+    let x = ms / 1000;
+    const seconds = Math.floor(x % 60);
+    const secondsStr = `${(seconds < 10) ? '0' : ''}${seconds.toString()}`;
+    x /= 60;
+    const minutes = Math.floor(x % 60);
+    const minutesStr = `${(minutes < 10) ? '0' : ''}${minutes.toString()}`;
+    x /= 60;
+    const hours = Math.floor(x % 24).toString();
+    const hoursStr = `${(hours < 10) ? '0' : ''}${hours.toString()}`;
+    x /= 24;
+    return `${hoursStr}:${minutesStr}:${secondsStr}`;
+  };
+
+  const convertLapsToClock = laps => (
+    laps.map(lapTime => (
+      convertMillisecondsToClockString(lapTime)
+    ))
+  );
 
   const getBlankTimerObj = () => ({
     timerStart: +new Date(),
@@ -78,17 +101,6 @@ Kingular.clientTimer = ((ls, r, tickCallback) => {
     return fn();
   };
 
-  /*
-  const getTimerOutput = (s) => {
-    const laps = s.laps;
-    let displayStr = '0';
-    if (laps.length) {
-      displayStr = laps.map(time => time);
-    }
-    return displayStr;
-  };
-  */
-
   const saveToLocalStorage = (key, data, localstorage) => {
     localstorage.setItem(key, JSON.stringify(data));
   };
@@ -98,28 +110,40 @@ Kingular.clientTimer = ((ls, r, tickCallback) => {
   const dispatchStartEvent = () => {
     state.dispatch({ type: TIMER_START });
     if (typeof tickCallback === 'function') {
-      tickCallback(state.getState());
+      const lapStringObject = {
+        lapsString: convertLapsToClock(state.getState().laps),
+      };
+      tickCallback(Object.assign(state.getState(), lapStringObject));
     }
   };
 
   const dispatchTickEvent = () => {
     state.dispatch({ type: TIMER_TICK });
     if (typeof tickCallback === 'function') {
-      tickCallback(state.getState());
+      const lapStringObject = {
+        lapsString: convertLapsToClock(state.getState().laps),
+      };
+      tickCallback(Object.assign(state.getState(), lapStringObject));
     }
   };
 
   const dispatchLapEvent = () => {
     state.dispatch({ type: LAP_CAPTURE });
     if (typeof tickCallback === 'function') {
-      tickCallback(state.getState());
+      const lapStringObject = {
+        lapsString: convertLapsToClock(state.getState().laps),
+      };
+      tickCallback(Object.assign(state.getState(), lapStringObject));
     }
   };
 
   const dispatchStopEvent = () => {
     state.dispatch({ type: TIMER_STOP });
     if (typeof tickCallback === 'function') {
-      tickCallback(state.getState());
+      const lapStringObject = {
+        lapsString: convertLapsToClock(state.getState().laps),
+      };
+      tickCallback(Object.assign(state.getState(), lapStringObject));
     }
   };
 
@@ -127,7 +151,10 @@ Kingular.clientTimer = ((ls, r, tickCallback) => {
     if (state.getState().isRunning) dispatchStopEvent();
     state.dispatch({ type: TIMER_RESET });
     if (typeof tickCallback === 'function') {
-      tickCallback(state.getState());
+      const lapStringObject = {
+        lapsString: convertLapsToClock(state.getState().laps),
+      };
+      tickCallback(Object.assign(state.getState(), lapStringObject));
     }
   };
 
@@ -153,7 +180,10 @@ Kingular.clientTimer = ((ls, r, tickCallback) => {
   if (state.getState().isRunning === true) {
     dispatchStartEvent();
   } else if (typeof tickCallback === 'function') {
-    tickCallback(state.getState());
+    const lapStringObject = {
+      lapsString: convertLapsToClock(state.getState().laps),
+    };
+    tickCallback(Object.assign(state.getState(), lapStringObject));
   }
 
   return { // Public APIs
@@ -164,5 +194,6 @@ Kingular.clientTimer = ((ls, r, tickCallback) => {
     getTimerInfo() {
       return state.getState();
     },
+    ConvertToClockStr: convertMillisecondsToClockString,
   };
 });

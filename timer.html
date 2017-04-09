@@ -21,7 +21,6 @@
         const resetBtn = doc.getElementsByClassName('resetButton')[0];
         const timerDisplayElement = doc.getElementsByClassName('timerText')[0];
         let timerTick;
-        let timer;
 
         stopBtn.addEventListener(CLICK_EVENT, () => {
           timer.stopTimer();
@@ -39,10 +38,9 @@
           timer.resetTimer();
         });
 
-
         // Function declartion, hoisted up to the top upon exectuion.
         timerTick = (timerState) => {
-          const laps = timerState.laps;
+          const laps = timerState.lapsString;
           let displayStr = '0';
           if (laps.length) {
             displayStr = laps.map(time => time);
@@ -50,7 +48,7 @@
           timerDisplayElement.innerHTML = displayStr;
         }
 
-        timer = Kingular.clientTimer(ls, redux, timerTick);
+        const timer = Kingular.clientTimer(ls, redux, timerTick);
       })(document, window.localStorage, Redux); // IIFE
     </script>
   </body>
