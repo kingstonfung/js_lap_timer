@@ -20,7 +20,6 @@
         const lapBtn = doc.getElementsByClassName('lapTimerButton')[0];
         const resetBtn = doc.getElementsByClassName('resetButton')[0];
         const timerDisplayElement = doc.getElementsByClassName('timerText')[0];
-        let timerTick;
 
         stopBtn.addEventListener(CLICK_EVENT, () => {
           timer.stopTimer();
@@ -39,7 +38,7 @@
         });
 
         // Function declartion, hoisted up to the top upon exectuion.
-        timerTick = (timerState) => {
+        const timerTick = (timerState) => {
           const laps = timerState.lapsString;
           let displayStr = '0';
           if (laps.length) {
