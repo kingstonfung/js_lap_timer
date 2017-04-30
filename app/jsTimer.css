@@ -1,0 +1,18 @@
+.jsClientTimer {
+  font-family: sans-serif;
+  display: block;
+  width: 300px;
+  height: 100px;
+  background: rgba(0, 0, 0, 0.3);
+  position: fixed;
+  right: -300px;
+  transition: right 0.3s ease-out;
+}
+
+  .jsClientTimer.show {
+    right: 0px;
+  }
+
+  .jsClientTimer .timerText, .jsClientTimer .totalTimeText {
+    display: inline-block;
+  }

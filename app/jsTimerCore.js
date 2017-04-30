@@ -14,14 +14,14 @@ if (typeof Kingular === 'undefined' || !Kingular) {
   Kingular = {};
 }
 
-Kingular.clientTimer = ((ls, r, tickCallback) => {
+Kingular.clientTimerFactory = ((json, ls, r, tickCallback) => {
   const TIMER_TICK = 'TICK';
   const LAP_CAPTURE = 'LAP';
   const TIMER_START = 'START';
   const TIMER_STOP = 'STOP';
   const TIMER_RESET = 'RESET';
   const LOCAL_STORAGE_KEY = 'timer_data';
-  const TIMER_UPDATE_INTERVAL = 250; // '60'fps
+  const TIMER_UPDATE_INTERVAL = 250;
 
   let storedState = {};
   let state = {};
@@ -49,7 +49,9 @@ Kingular.clientTimer = ((ls, r, tickCallback) => {
 
   const getBlankTimerObj = () => ({
     timerStart: +new Date(),
-    elapsed: 0,
+    lapStart: +new Date(),
+    lapElapsed: 0,
+    totalElapsed: 0,
     laps: [],
     isRunning: false,
   });
@@ -65,21 +67,25 @@ Kingular.clientTimer = ((ls, r, tickCallback) => {
         };
         if (appState.laps.length === 0) {
           newAppState.timerStart = +new Date();
+          newAppState.lapStart = +new Date();
         }
         return Object.assign(appState, newAppState);
       },
       [TIMER_TICK]() {
-        const lapsCount = appState.elapsed;
-        const newTime = +new Date() - appState.timerStart;
+        const lapsCount = appState.lapElapsed;
+        const newTime = +new Date() - appState.lapStart;
+        const totalTime = +new Date() - appState.timerStart;
         newAppState = {
           laps: appState.laps,
+          totalElapsed: totalTime,
         };
         newAppState.laps[lapsCount] = newTime;
         return Object.assign(appState, newAppState);
       },
       [LAP_CAPTURE]() {
         newAppState = {
-          elapsed: (appState.elapsed + 1),
+          lapElapsed: (appState.lapElapsed + 1),
+          lapStart: +new Date(),
         };
         return Object.assign(appState, newAppState);
       },
@@ -102,67 +108,92 @@ Kingular.clientTimer = ((ls, r, tickCallback) => {
   };
 
   const saveToLocalStorage = (key, data, localstorage) => {
-    localstorage.setItem(key, JSON.stringify(data));
+    localstorage.setItem(key, json.stringify(data));
   };
 
-  const loadFromLocalStorage = key => JSON.parse(ls.getItem(key));
+  const loadFromLocalStorage = key => json.parse(ls.getItem(key));
 
-  const dispatchStartEvent = () => {
-    state.dispatch({ type: TIMER_START });
+  const dispatchStartEvent = (currentState = state) => {
+    currentState.dispatch({ type: TIMER_START });
     if (typeof tickCallback === 'function') {
+      const stateObj = currentState.getState();
+      const laps = stateObj.laps;
       const lapStringObject = {
-        lapsString: convertLapsToClock(state.getState().laps),
+        lapsString: convertLapsToClock(laps),
       };
-      tickCallback(Object.assign(state.getState(), lapStringObject));
+      tickCallback(Object.assign(stateObj, lapStringObject));
     }
   };
 
-  const dispatchTickEvent = () => {
-    state.dispatch({ type: TIMER_TICK });
+  const dispatchTickEvent = (currentState = state) => {
+    currentState.dispatch({ type: TIMER_TICK });
     if (typeof tickCallback === 'function') {
+      const stateObj = currentState.getState();
+      const laps = stateObj.laps;
+      const totalTime = stateObj.totalElapsed;
       const lapStringObject = {
-        lapsString: convertLapsToClock(state.getState().laps),
+        lapsString: convertLapsToClock(laps),
+        totalTimeString: convertMillisecondsToClockString(totalTime),
       };
-      tickCallback(Object.assign(state.getState(), lapStringObject));
+      tickCallback(Object.assign(stateObj, lapStringObject));
     }
   };
 
-  const dispatchLapEvent = () => {
-    state.dispatch({ type: LAP_CAPTURE });
+  const dispatchLapEvent = (currentState = state) => {
+    currentState.dispatch({ type: LAP_CAPTURE });
     if (typeof tickCallback === 'function') {
+      const stateObj = currentState.getState();
+      const laps = stateObj.laps;
       const lapStringObject = {
-        lapsString: convertLapsToClock(state.getState().laps),
+        lapsString: convertLapsToClock(laps),
       };
-      tickCallback(Object.assign(state.getState(), lapStringObject));
+      tickCallback(Object.assign(stateObj, lapStringObject));
     }
   };
 
-  const dispatchStopEvent = () => {
-    state.dispatch({ type: TIMER_STOP });
+  const dispatchStopEvent = (currentState = state) => {
+    currentState.dispatch({ type: TIMER_STOP });
     if (typeof tickCallback === 'function') {
+      const stateObj = currentState.getState();
+      const laps = stateObj.laps;
       const lapStringObject = {
-        lapsString: convertLapsToClock(state.getState().laps),
+        lapsString: convertLapsToClock(laps),
       };
-      tickCallback(Object.assign(state.getState(), lapStringObject));
+      tickCallback(Object.assign(stateObj, lapStringObject));
     }
   };
 
-  const dispatchResetEvent = () => {
-    if (state.getState().isRunning) dispatchStopEvent();
-    state.dispatch({ type: TIMER_RESET });
+  const dispatchResetEvent = (currentState = state) => {
+    let stateObj = currentState.getState();
+    if (stateObj.isRunning) dispatchStopEvent(currentState);
+    currentState.dispatch({ type: TIMER_RESET });
+    stateObj = currentState.getState();
     if (typeof tickCallback === 'function') {
+      const laps = stateObj.laps;
       const lapStringObject = {
-        lapsString: convertLapsToClock(state.getState().laps),
+        lapsString: convertLapsToClock(laps),
       };
-      tickCallback(Object.assign(state.getState(), lapStringObject));
+      tickCallback(Object.assign(stateObj, lapStringObject));
     }
   };
 
-  const createTimeoutCall = () => (
+  const createTimeoutCall = (currentState = state) => (
     setTimeout(() => {
-      dispatchTickEvent();
+      dispatchTickEvent(currentState);
     }, TIMER_UPDATE_INTERVAL)
   );
+
+  const getTimerJSONString = (format, timerState) => {
+    const client = timerState.laps[0];
+    const after = timerState.laps[timerState.laps.length] || timerState.laps[0];
+    const total = timerState.totalElapsed;
+    const timeData = {
+      client: (format === 'clock') ? convertMillisecondsToClockString(client) : client,
+      after: (format === 'clock') ? convertMillisecondsToClockString(after) : after,
+      total: (format === 'clock') ? convertMillisecondsToClockString(total) : total,
+    };
+    return json.stringify(timeData); // first lap, last lap, total time
+  };
 
   // Init scripts
   storedState = loadFromLocalStorage(LOCAL_STORAGE_KEY) || getBlankTimerObj();
@@ -178,7 +209,7 @@ Kingular.clientTimer = ((ls, r, tickCallback) => {
     }
   });
   if (state.getState().isRunning === true) {
-    dispatchStartEvent();
+    dispatchStartEvent(state);
   } else if (typeof tickCallback === 'function') {
     const lapStringObject = {
       lapsString: convertLapsToClock(state.getState().laps),
@@ -194,6 +225,9 @@ Kingular.clientTimer = ((ls, r, tickCallback) => {
     getTimerInfo() {
       return state.getState();
     },
-    ConvertToClockStr: convertMillisecondsToClockString,
+    getStatusJSONString(format = '', timerState = state.getState()) {
+      return getTimerJSONString(format, timerState);
+    },
+    // ConvertToClockStr: convertMillisecondsToClockString,
   };
 });

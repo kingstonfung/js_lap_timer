@@ -2,53 +2,22 @@
 <html>
   <head>
     <title>Redux JS Lap Timer</title>
-    <script type="text/javascript" src="redux.min.js"></script>
+    <script type="text/javascript" src="./app/main.js"></script>
   </head>
   <body>
-    <div class="timerText"></div>
-    <button class="startTimerButton">Start Timer</button>
-    <button class="stopTimerButton">Stop Timer</button>
-    <button class="lapTimerButton">Lap</button>
-    <button class="resetButton">RESET EVERYTHING</button>
-    <script type="text/javascript" src="timer.js"></script>
-    <script type="text/javascript">
-      ((doc, ls, redux) => {
-        /* global Kingular:true */
-        const CLICK_EVENT = 'click';
-        const startBtn = doc.getElementsByClassName('startTimerButton')[0];
-        const stopBtn = doc.getElementsByClassName('stopTimerButton')[0];
-        const lapBtn = doc.getElementsByClassName('lapTimerButton')[0];
-        const resetBtn = doc.getElementsByClassName('resetButton')[0];
-        const timerDisplayElement = doc.getElementsByClassName('timerText')[0];
-
-        stopBtn.addEventListener(CLICK_EVENT, () => {
-          timer.stopTimer();
-        });
-
-        lapBtn.addEventListener(CLICK_EVENT, () => {
-          timer.lapTimer();
-        });
-
-        startBtn.addEventListener(CLICK_EVENT, () => {
-          timer.startTimer();
-        });
-
-        resetBtn.addEventListener(CLICK_EVENT, () => {
-          timer.resetTimer();
-        });
-
-        // Function declartion, hoisted up to the top upon exectuion.
-        const timerTick = (timerState) => {
-          const laps = timerState.lapsString;
-          let displayStr = '0';
-          if (laps.length) {
-            displayStr = laps.map(time => time);
-          }
-          timerDisplayElement.innerHTML = displayStr;
-        }
-
-        const timer = Kingular.clientTimer(ls, redux, timerTick);
-      })(document, window.localStorage, Redux); // IIFE
-    </script>
+    <button class="toggle">Show/Hide Timer</button>
+    <br/>
+    To pull data out of timer, type in console:
+    <br/>
+    Kingular.clientTimer.getStatusJSONString(); or Kingular.clientTimer.getStatusJSONString('clock');
   </body>
+  <script>
+    ((doc) => {
+      var toggleBtn = doc.querySelector('.toggle');
+      toggleBtn.addEventListener('click', () => {
+        const timerShell = doc.querySelector('.jsClientTimer');
+        timerShell.classList.toggle('show');
+      });
+    })(document);
+  </script>
 </html>
