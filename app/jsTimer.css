@@ -1,12 +1,17 @@
 .jsClientTimer {
-  font-family: sans-serif;
+  font-family: "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  color: #fff;
+  padding: 15px;
   display: block;
   width: 300px;
-  height: 100px;
-  background: rgba(0, 0, 0, 0.3);
+  height: 150px;
+  bottom: 0px;
+  background: #272b35;
   position: fixed;
-  right: -300px;
-  transition: right 0.3s ease-out;
+  right: -350px;
+  transition: right 0.25s ease-out;
+  font-weight: 500;
 }
 
   .jsClientTimer.show {
@@ -15,4 +20,28 @@
 
   .jsClientTimer .timerText, .jsClientTimer .totalTimeText {
     display: inline-block;
+  }
+
+  .jsClientTimer button {
+    border: 0;
+    margin: 5px 5px 5px 0;
+    border: 1px solid #aaa;
+    color: #aaa;
+    background: #21252d;
+    transition: background-color 0.25s ease-out;
+    transition: color 0.25s ease-out;
+  }
+
+  .jsClientTimer button:hover {
+    background: #10cfbd;
+    border: 1px solid white;
+    color: white;
+  }
+
+  .jsClientTimer span.lineBreak {
+    display: block;
+  }
+
+  .jsClientTimer span.lineBreak:not(:first-child) {
+    margin-top: 10px;
   }

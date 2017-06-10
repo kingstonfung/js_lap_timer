@@ -2,13 +2,14 @@
   const uiInternals = (doc, redux, anchorElement, maxLaps) => {
     anchorElement.insertAdjacentHTML('beforeend', `
       <div class="jsClientTimer">
-        Client Interaction: <div class="timerText">00:00:00</div>
-        <br/>
+        <span class="lineBreak">
+          Client Interaction: <div class="timerText">00:00:00</div>
+        </span>
         <button class="startTimerButton">Start Both Timer</button>
         <button class="lapTimerButton"><!--Lap-->Stop Client Timer</button>
-        <br/><br/>
-        After Interaction: <div class="totalTimeText">00:00:00</div>
-        <br/>
+        <span class="lineBreak">
+          After Interaction: <div class="totalTimeText">00:00:00</div>
+        </span>
         <button class="stopTimerButton">Stop Both Timer</button>
         <button class="resetButton">RESET</button>
       </div>
