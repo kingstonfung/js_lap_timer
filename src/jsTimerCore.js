@@ -1,13 +1,5 @@
-/*
-TO DO:
-  ✓  Fix scattered clearTimeout
-  ✓  Fix timer reset incorrect timestamp
-  ✓  Lint with Airbnb JS standard
-  4. Fix "Stop Timer".
-    - The duration between a "stop" and "start" is included right now.
-    - Just rename button and methods to "Pause Timer"?
-  5. Unit Tests, Build Scripts, Minifications
-*/
+import { createStore } from 'redux';
+
 ((win) => {
   const internals = {};
   internals.clientTimerFactory = ((json, ls, r, tickCallback) => {
@@ -193,7 +185,8 @@ TO DO:
 
     // Init scripts
     storedState = loadFromLocalStorage(LOCAL_STORAGE_KEY) || getBlankTimerObj();
-    state = r.createStore(timerClockReducerFunc, storedState);
+    // state = r.createStore(timerClockReducerFunc, storedState);
+    state = createStore(timerClockReducerFunc, storedState);
     state.subscribe(() => {
       const s = state.getState();
       saveToLocalStorage(LOCAL_STORAGE_KEY, s, ls);
