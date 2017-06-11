@@ -22,9 +22,10 @@ Sports usage aside, there are many businesses that requires precise measurements
 **A)** Time spent *WITH* the client during visit such as face-to-face consultation, physical diagnosis, or simply gathering requirements.
 **B)** Time spent *AFTER* client visit such as paperwork filing, charting, prescription filling, or building cases for business processing.
 
-## Widget Installation (WIP):
-<!-- - Simply include the JS file in your HTML.
-   * `<script type="text/javascript" src="TBD-URL.min.js"></script>` -->
+## Widget Implementation (WIP):
+Single line `<script>` Implementation:
+
+`<script src="http://cdn.rawgit.com/kingstonfung/js_lap_timer/implementation_details/release/js_timer.min.js" data-source-origin="https://cdn.rawgit.com/kingstonfung/js_lap_timer/implementation_details/" data-source-style="release/js_timer.min.css"></script>`
 
 ## Dev Environment Installation (WIP):
 <!-- 1. Ensure Node.JS is installed on your system. [Link to Getting Started](https://docs.npmjs.com/getting-started/installing-node)
