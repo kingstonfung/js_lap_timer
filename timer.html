@@ -4,11 +4,17 @@
     <title>Redux JS Lap Timer</title>
   </head>
   <body>
-    <button class="toggle" data-widget='js-timer'>Show/Hide Timer</button>
+    <button class="toggle" id="awesomeTimer">Show/Hide Timer</button>
     <br/>
     To pull data out of timer, type in console:
     <br/>
     Kingular.clientTimer.getStatusJSONString(); or Kingular.clientTimer.getStatusJSONString('clock');
-    <script type="text/javascript" src="/release/js_timer.min.js" data-source-origin='http://localhost:8000/' data-source-style='release/js_timer.min.css' async></script>
+    <script type="text/javascript"
+      src="/release/js_timer.min.js"
+      data-source-origin=""
+      data-source-style="/release/js_timer.min.css"
+      data-toggle-button-selector="#awesomeTimer"
+      async>
+    </script>
   </body>
 </html>

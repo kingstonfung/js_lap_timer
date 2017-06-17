@@ -4,8 +4,6 @@ require('./jsTimerCore.js');
 require('./jsTimerUI.js');
 
 ((doc, win) => {
-  // const TOGGLE_BTN_SELECTOR = '.toggle[data-widget="js-timer"]';
-  const TOGGLE_BTN_SELECTOR = '#divUserMenu > div.dropdown.pull-right > button > span > img';
   const TOGGLE_EVENT_TRIGGER = 'click';
   const JS_TIMER_SHELL_SELECTOR = '.jsClientTimer';
   const JS_TIMER_SHOW_CLASS = 'show';
@@ -13,6 +11,7 @@ require('./jsTimerUI.js');
   const MAX_LAPS = +doc.currentScript.dataset.maxlaps || 1;
   const APP_SOURCE_ORIGIN = doc.currentScript.dataset.sourceOrigin || '';
   const APP_SOURCE_STYLE = doc.currentScript.dataset.sourceStyle || 'build/styles.css';
+  const TOGGLE_BTN_SELECTOR = doc.currentScript.dataset.toggleButtonSelector || '.toggle[data-widget="js-timer"]';
 
   let toggleBtn;
   let timerShell;
